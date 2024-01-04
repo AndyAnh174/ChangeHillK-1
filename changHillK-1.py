@@ -1,37 +1,63 @@
 import numpy as np
-from sympy import Matrix
-def inverse_modulo(det, m):
 
-    for i in range(1, m):
-        if (det * i) % m == 1:
-            return i
-    return None
+def text_to_numbers(text):
+    return [ord(char) - ord('A') for char in text]
 
-def decrypt_hill_cipher(ciphertext, key_matrix):
+def numbers_to_text(numbers):
+    return ''.join([chr(num + ord('A')) for num in numbers])
 
-    det = int(round(Matrix(key_matrix).det()))
-    mod_inverse = inverse_modulo(det, 26)
+def pad_text(text, block_size):
+    padding = (block_size - len(text) % block_size) % block_size
+    return text + 'X' * padding
 
-    if mod_inverse is None:
-        print("cant nghịch đảo modulo, cant giải mã.")
-        return
+def get_key_matrix():
+    try:
+        print("Nhập ma trận khóa K:")
+        rows = int(input("Số hàng: "))
+        cols = int(input("Số cột: "))
+        key_matrix = []
+
+        print("Nhập giá trị cho từng phần tử của ma trận:")
+        for i in range(rows):
+            row = []
+            for j in range(cols):
+                element = int(input(f"K[{i+1},{j+1}]: "))
+                row.append(element)
+            key_matrix.append(row)
+
+        return np.array(key_matrix)
+
+    except ValueError:
+        print("Lỗi: Vui lòng nhập số nguyên cho từng phần tử của ma trận.")
+        return get_key_matrix()
+
+def matrix_mod_inv(matrix, modulus):
+    det = int(np.round(np.linalg.det(matrix)))
+    det_inv = pow(det, -1, modulus)
+    matrix_mod_inv = (det_inv * np.round(det * np.linalg.inv(matrix)).astype(int)) % modulus
+    return matrix_mod_inv
+
+def hill_cipher_decode(encoded_text, key_matrix):
+    block_size = len(key_matrix)
+    key_matrix_inv = matrix_mod_inv(key_matrix, 26)
+
+    numbers = text_to_numbers(encoded_text)
+    vectors = [numbers[i:i+block_size] for i in range(0, len(encoded_text), block_size)]
+
+    decoded_vectors = []
+    for vector in vectors:
+        vector = np.array(vector)
+        decoded_vector = np.dot(key_matrix_inv, vector) % 26
+        decoded_vectors.extend(decoded_vector)
+
+    decoded_text = numbers_to_text(decoded_vectors)
+
+    return decoded_text
 
 
-    inverse_matrix = Matrix(key_matrix).inv_mod(26)
-
-    decrypted_text = ""
-    n = len(key_matrix)
-
-    for i in range(0, len(ciphertext), n):
-        block = ciphertext[i:i+n]
-        encrypted_block = np.dot(inverse_matrix, [ord(char) - ord('A') for char in block]) % 26
-        decrypted_text += ''.join([chr(char + ord('A')) for char in encrypted_block])
-
-    return decrypted_text
+encoded_text = input("Nhập văn bản cần giải mã: ").upper()
+key_matrix = get_key_matrix()
 
 
-ciphertext = "HVQMIQEFNA"
-key_matrix = [[2, 3], [3, 6]]
-
-decrypted_text = decrypt_hill_cipher(ciphertext, key_matrix)
-print("TEST THANH =>", decrypted_text)
+decoded_text = hill_cipher_decode(encoded_text, key_matrix)
+print("Văn bản đã giải mã:", decoded_text)

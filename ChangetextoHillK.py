@@ -1,23 +1,62 @@
 import numpy as np
 
-def encrypt_hill_cipher(plaintext, key_matrix):
-    text_numbers = [ord(char) - ord('A') for char in plaintext]
-    n = len(key_matrix)
+def text_to_numbers(text):
+    return [ord(char) - ord('A') for char in text]
 
-    while len(text_numbers) % n != 0:
-        text_numbers.append(ord('X') - ord('A'))
+def numbers_to_text(numbers):
+    return ''.join([chr(num + ord('A')) for num in numbers])
 
-    text_blocks = [text_numbers[i:i + n] for i in range(0, len(text_numbers), n)]
+def pad_text(text, block_size):
+    padding = (block_size - len(text) % block_size) % block_size
+    return text + 'X' * padding
 
-    encrypted_text = ""    
-    for block in text_blocks:
-        encrypted_block = np.dot(key_matrix, block) % 26
-        encrypted_text += ''.join([chr(char + ord('A')) for char in encrypted_block])
+def get_key_matrix():
+    try:
+        print("Nhập ma trận khóa K:")
+        rows = int(input("Số hàng: "))
+        cols = int(input("Số cột: "))
+        key_matrix = []
 
-    return encrypted_text
+        print("Nhập giá trị cho từng phần tử của ma trận:")
+        for i in range(rows):
+            row = []
+            for j in range(cols):
+                element = int(input(f"K[{i+1},{j+1}]: "))
+                row.append(element)
+            key_matrix.append(row)
 
-plaintext = "HOWDOYOUKNOW"
-key_matrix = np.array([[8, 2], [3, 1]])
+        return np.array(key_matrix)
 
-encrypted_text = encrypt_hill_cipher(plaintext, key_matrix)
-print("TEXT:", encrypted_text)
+    except ValueError:
+        print("Lỗi: Vui lòng nhập số nguyên cho từng phần tử của ma trận.")
+        return get_key_matrix()
+
+def hill_cipher_encode(text, key_matrix):
+
+    numbers = text_to_numbers(text)
+
+
+    block_size = len(key_matrix)
+    padded_text = pad_text(text, block_size)
+
+    vectors = [numbers[i:i+block_size] for i in range(0, len(padded_text), block_size)]
+
+
+    encoded_vectors = []
+    for vector in vectors:
+        vector = np.array(vector)
+        encoded_vector = np.dot(key_matrix, vector) % 26
+        encoded_vectors.extend(encoded_vector)
+
+
+    encoded_text = numbers_to_text(encoded_vectors)
+
+    return encoded_text
+
+
+plaintext = input("Nhập văn bản cần mã hóa: ").upper()
+key_matrix = get_key_matrix()
+
+encoded_text = hill_cipher_encode(plaintext, key_matrix)
+print("Văn bản gốc:", plaintext)
+print("Văn bản mã hóa:", encoded_text)
