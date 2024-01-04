@@ -9,15 +9,15 @@ def encrypt_hill_cipher(plaintext, key_matrix):
 
     text_blocks = [text_numbers[i:i + n] for i in range(0, len(text_numbers), n)]
 
-    encrypted_text = ""
+    encrypted_text = ""    
     for block in text_blocks:
         encrypted_block = np.dot(key_matrix, block) % 26
         encrypted_text += ''.join([chr(char + ord('A')) for char in encrypted_block])
 
     return encrypted_text
 
-plaintext = "0949000030MBBANK"
-key_matrix = np.array([[6, 2], [3, 1]])
+plaintext = "HOWDOYOUKNOW"
+key_matrix = np.array([[8, 2], [3, 1]])
 
 encrypted_text = encrypt_hill_cipher(plaintext, key_matrix)
-print("Văn bản mã hóa:", encrypted_text)
+print("TEXT:", encrypted_text)
